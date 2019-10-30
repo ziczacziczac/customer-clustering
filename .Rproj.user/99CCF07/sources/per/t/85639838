@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572364380514.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "220696794",
+    "id" : "85639838",
+    "lastKnownWriteTime" : 1566404544,
+    "last_content_update" : 1566404544,
+    "path" : "~/Time series clustering/lib/clustering_result_analyst.R",
+    "project_path" : "lib/clustering_result_analyst.R",
+    "properties" : {
+        "cursorPosition" : "58,39",
+        "scrollLine" : "39"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

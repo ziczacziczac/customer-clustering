@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1570843015786.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2432093740",
+    "id" : "DA2C083D",
+    "lastKnownWriteTime" : 1572366874,
+    "last_content_update" : 1572366874435,
+    "path" : "~/Time series clustering/markdown/Customer_behavior_clustering.Rmd",
+    "project_path" : "markdown/Customer_behavior_clustering.Rmd",
+    "properties" : {
+        "cursorPosition" : "247,20",
+        "last_setup_crc32" : "56170412c2990f8f",
+        "scrollLine" : "241"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -1,0 +1,7 @@
+"0","```r
+balance_open <- read.csv(\"../data/data_sample.csv\", sep = \",\", header = FALSE)
+balance_open <- as.matrix(balance_open)
+dim(balance_open)
+```"
+"1","[1]  59 460
+"

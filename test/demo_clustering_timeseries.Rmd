@@ -1,0 +1,210 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(cluster)
+library(knitr)
+library(hts)
+library(forecast)
+source("frame_timeseries.R")
+loadsource()
+```
+
+#Read data sample
+```{r}
+raw_balance <- read.csv("data_sample.csv", header = FALSE)
+dim(raw_balance)
+```
+
+#Remove accounts have zero balance
+```{r}
+sum_raw <- colSums(raw_balance)
+index <- which(sum_raw > 0)
+raw_balance <- raw_balance[, index]
+dim(raw_balance)
+```
+
+```{r}
+plot(ts(raw_balance[, 1]), col = colors()[100], ylab = "Balance(milion)", xlab = "month", main = "Balance")
+
+for(i in 2:10){
+  lines(ts(raw_balance[, i]), col = colors()[80+i])
+}
+
+```
+#Normalize data
+```{r}
+normalize <- function(data){
+  for(i in 1:length(data[1, ])){
+    x <- (data[, i] - min(data[, i])) / (max(data[, i]) - min(data[, i]))
+    x[is.na(x)] <- 0
+    data[, i] <- x
+  }
+  return(data)
+}
+
+balance_normalize <- normalize(raw_balance)
+```
+
+```{r}
+plot(ts(balance_normalize[, 1]), col = colors()[100], ylab = "Balance(milion)", xlab = "month", main = "Balance")
+
+for(i in 2:10){
+  lines(ts(balance_normalize[, i]), col = colors()[80+i])
+}
+
+```
+
+#Split Training - Testing
+```{r}
+train <- balance_normalize[1:48, ]
+test <- balance_normalize[49:59, ]
+
+raw_train <- raw_balance[1:48, ]
+raw_test <- raw_balance[49:49, ]
+dim(train)
+dim(test)
+```
+
+```{r}
+computeDistMatrix <- function(data){
+  library(TSdist)
+  n = length(data[1, ])
+  m = matrix(0, nrow = n, ncol = n)
+  for(i in 1:(n - 1)){
+    for(j in (i+1):n){
+      x = data[, i]
+      y = data[, j]
+     
+      d = CCorDistance(x, y)
+      
+      #print(d)
+      m[i, j] = d
+      m[j, i] = d
+    }
+  }
+  return(m)
+}
+```
+
+#Compute Diss Matrix EUCL, ACF, PCF, CCD, DTW
+```{r}
+library(TSdist)
+library(TSclust)
+system.time(diss_ccd <- computeDistMatrix(train))
+system.time(diss_eucl <- diss(t(train), "EUCL"))
+system.time(diss_dtwarp <- diss(t(train), "DTWARP"))
+
+write.csv(as.matrix(diss_ccd), "balance_diss_ccd.csv")
+write.csv(as.matrix(diss_eucl), "balance_diss_eucl.csv")
+write.csv(as.matrix(diss_dtwarp), "balance_diss_dtwarp.csv")
+```
+
+#Clustering
+```{r}
+source("cluster.R")
+source("silhouette.R")
+c1 <- clusteringTimeseriesByAHC(train, "CCD", "complete", "balance_diss_ccd.csv")
+c1 <- clusteringTimeseriesByAHC(train, "EUCL", "complete", "balance_diss_eucl.csv")
+c1 <- clusteringTimeseriesByAHC(train, "DTWARP", "complete", "balance_diss_dtwarp.csv")
+```
+
+#Summary Cluster
+```{r}
+id_cluster1 <- c1[[3]]
+id_cluster2 <- c1[[4]]
+
+l <- list()
+l[[1]] <- colMeans(raw_train[, id_cluster1])
+l[[2]] <- colMeans(raw_train[, id_cluster2])
+
+source("datadescription.R")
+
+f <- summaryClusters(l)
+kable(f, col.names = c("CLUSTER 1", "CLUSTER 2"), digits = 2)
+
+a <- f[5, ]
+b <- f[6, ]
+barplot(t(cbind(a, b)), beside = TRUE, col = c("red", "blue"), legend = c("TRUNG BINH SO TIEN RUT", "DO LECH CHUAN"), names.arg = c("CLUSTER 1", "CLUSTER 2"), width = c(0.1:0.1), space = c(0, 5), ylab  = "Balance(million)")
+```
+
+#Clustering CLUSTER 1
+```{r}
+source("cluster.R")
+c2 <- clusteringTimeseriesGivenCluster(c1[[3]], train, "PACF", "complete", "balance_diss_pacf.csv")
+```
+
+```{r}
+id_cluster1 <- c2[[3]]
+id_cluster2 <- c2[[4]]
+
+l <- list()
+l[[1]] <- colMeans(raw_train[, id_cluster1])
+l[[2]] <- colMeans(raw_train[, id_cluster2])
+
+source("datadescription.R")
+
+f <- summaryClusters(l)
+kable(f, col.names = c("CLUSTER 1", "CLUSTER 2"), digits = 2)
+
+a <- f[5, ]
+b <- f[6, ]
+barplot(t(cbind(a, b)), beside = TRUE, col = c("red", "blue"), legend = c("TRUNG BINH SO TIEN RUT", "DO LECH CHUAN"), names.arg = c("CLUSTER 1", "CLUSTER 2"), width = c(0.1:0.1), space = c(0, 5), ylab  = "Balance(million)")
+```
+
+#Build Hierarchical Tree
+```{r}
+source("forecast.R")
+
+listCluster <- list()
+listCluster[[1]] <- c2[[3]]
+listCluster[[2]] <- c2[[4]]
+listCluster[[3]] <- c1[[4]]
+
+gg <- generateHiearachy3cluster(listCluster, raw_balance)
+
+t <- aggts(gg)
+cols <- c("red", "green", "blue", "deeppink", "black", "navy", "orange", "yellowgreen", "darkviolet", "maroon", "purple")
+ plot(t[, 4], col = cols[1], type = "l", xlab = "THANG", ylab = "SO TIEN RUT(TRIEU)", ylim = c(0, 5000))
+for(i in 2:3){
+  ts <- t[, i + 3]
+  lines(ts, col = cols[i])
+}
+
+plot(t[, 1], col = cols[i], type = "l", xlab = "THANG", ylab = "SO TIEN RUT(TRIEU)", main = "CHUOI TONG")
+```
+
+#Forecast
+```{r}
+train <- window(gg, 1, 48)
+forecast_train <- forecast.gts(train, h = 11,method = "bu", fmethod = "arima")
+forecast_train_all <- aggts(forecast_train)
+par(mfrow = c(3, 3))
+for(i in 4:6){
+  t <- aggts(gg)
+  arima_model <- auto.arima(t[1:48, i])
+  ft <- forecast(arima_model, h = 11)
+  
+  plot(ft, main = paste("NHOM", i - 3))
+  lines(t[49:59, i], x = 49:59, col = "red", lwd = 2)
+  #legend("topleft", legend = c("AUTO.ARIMA", "THUC TE"),fill= c("blue", "red"))
+  
+  print(mean(abs(ft$mean - t[49:59, i])))
+}
+
+t <- aggts(gg)
+arima_model <- auto.arima(t[1:48, 1])
+ft <- forecast(arima_model, h = 11)
+par(mfrow = c(1, 1))
+plot(ft, main = "CHUOI TONG", xlab = "THANG", ylab = "SO DU(TRIEU)")
+lines(t[49:59, 1], x = 49:59, col = "red", lwd = 5)
+lines(forecast_train_all[, 1], x= 49:59, col = "orange", lwd = 5)
+legend("topleft", legend = c("AUTO.ARIMA", "THUC TE", "HTS-BU"),fill= c("blue", "red", "orange"))
+print(mean(abs(ft$mean - t[49:59, 1])))
+print(mean(abs(forecast_train_all[, 1] - t[49:59, 1])))
+```
+
+

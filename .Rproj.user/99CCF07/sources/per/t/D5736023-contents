@@ -1,0 +1,48 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(readr)
+```
+
+```{r}
+data <- read.csv(file = "output_count.csv", sep="+", header=TRUE)
+dim(data)
+```
+```{r}
+tdvn <- as.numeric(data[, 2]);
+tdyh <- as.numeric(data[, 3]);
+ratio <- tdyh/tdvn;
+
+index_na <- which(ratio == "NaN");
+index_inf <- which(ratio == "Inf");
+index_g1 <- which(ratio >= 1)
+
+data_rm_na <- data[-c(index_inf, index_na, index_g1), ];
+tdvn <- as.numeric(data_rm_na[, 2]);
+tdyh <- as.numeric(data_rm_na[, 3]);
+ratio_rm_na <- tdyh/tdvn;
+dim(data_rm_na)
+```
+
+```{r}
+filter <- ratio_rm_na[which(ratio_rm_na > 0.05 & ratio_rm_na < 0.12)]
+quantile(filter);
+hist(filter);
+dens <- density(filter);
+plot(dens);
+
+filter <- ratio_rm_na[which(ratio_rm_na > 0.12 & ratio_rm_na < 0.2)]
+quantile(filter);
+hist(filter);
+dens <- density(filter);
+plot(dens);
+
+filter <- ratio_rm_na[which(ratio_rm_na > 0.2)]
+quantile(filter);
+hist(filter);
+dens <- density(filter);
+plot(dens)
+```

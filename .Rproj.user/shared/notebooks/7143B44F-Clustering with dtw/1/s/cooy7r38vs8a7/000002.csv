@@ -1,0 +1,8 @@
+"0","```r
+plot(ts(raw_balance[, 1]), col = colors()[100], ylab = \"Balance(milion)\", xlab = \"month\", main = \"Balance\")
+
+for(i in 2:10){
+  lines(ts(raw_balance[, i]), col = colors()[80+i])
+}
+
+```"

@@ -1,0 +1,94 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(dtwclust)
+```
+
+#Read data sample
+```{r}
+balance_open <- read.csv("../data/data_sample.csv", sep = ",", header = FALSE)
+balance_open <- as.matrix(balance_open)
+dim(balance_open)
+```
+
+
+#Remove accounts have zero balance
+```{r}
+sum_raw <- colSums(raw_balance)
+index <- which(sum_raw > 0)
+index2 <- which(sum_raw == 0)
+raw_balance <- raw_balance[, index]
+zero_balance <- raw_balance[, index2]
+dim(raw_balance)
+```
+
+```{r}
+plot(ts(raw_balance[, 1]), col = colors()[100], ylab = "Balance(milion)", xlab = "month", main = "Balance")
+
+for(i in 2:10){
+  lines(ts(raw_balance[, i]), col = colors()[80+i])
+}
+
+```
+
+
+#Split Training - Testing
+```{r}
+train <- raw_balance[1:48, ]
+test <- raw_balance[49:59, ]
+
+raw_train <- raw_balance[1:48, ]
+raw_test <- raw_balance[49:49, ]
+dim(train)
+dim(test)
+```
+
+#Calulate DTW distance
+```{r}
+require(doParallel)
+print("Do in one thread")
+registerDoSEQ()
+clust <- tsclust(t(train), type = "partitional", k = 4, distance = "dtw")
+save(clust, "abc.bin")
+cvi(clust, b = NULL, type = c("internal"))
+
+#cl <- makeCluster(detectCores())
+#invisible(clusterEvalQ(cl, {
+#    library(dtwclust)
+#    RcppParallel::setThreadOptions(2L)
+#}))
+#registerDoParallel(cl)
+#print("Do in parallel")
+#clus_res <- tsclust(t(train), type = "partitional", k = c(2, 3), distance = "dtw")
+
+#tsclust(t(train), type = "partitional", k = 4, distance = "dtw2")
+#tsclust(t(train), type = "partitional", k = 4, distance = "dtw2", centroid = "dba")
+#tsclust(t(train), type = "partitional", k = 4, distance = "sdtw")
+#tsclust(t(train), type = "partitional", k = 4, distance = "sdtw", centroid = "sdtw_cent")
+
+#clus_partitional_dtw_pam <- tsclust(t(balance_smooth_nor_clean), type = "partitional", k = c(2:8), distance = "dtw")
+#clus_partitional_dtw_dba <- tsclust(t(balance_smooth_nor_clean), type = "partitional", k = c(2:8), distance = "dtw", centroid = "dba")
+#clus_partitional_sdtw_sdtw <- tsclust(t(balance_smooth_nor_clean), type = "partitional", k = c(2:8), distance = "sdtw", centroid = "sdtw_cent")
+
+#clus_hirarchical_dtw_pam <- tsclust(t(balance_smooth_nor_clean), type = "hierarchical", k = c(2:8), distance = "dtw")
+#clus_hirarchicaldtw_dba <- tsclust(t(balance_smooth_nor_clean), type = "hierarchical", k = c(2:8), distance = "dtw", centroid = "dba")
+#clus_hirarchical_sdtw_sdtw <- tsclust(t(balance_smooth_nor_clean), type = "hierarchical", k = c(2:8), distance = "sdtw", centroid = "sdtw_cent")
+
+#save_clustering_result(clus_partitional_dtw_pam, "../result/clustering/clus_partitional_dtw_pam.bin")
+#save_clustering_result(clus_partitional_dtw_dba, "../result/clustering/clus_partitional_dtw_dba.bin")
+#save_clustering_result(clus_partitional_sdtw_sdtw, "../result/clustering/clus_partitional_sdtw_sdtw.bin")
+
+#save_clustering_result(clus_hirarchical_dtw_pam, "../result/clustering/clus_hirarchical_dtw_pam.bin")
+#save_clustering_result(clus_hirarchicaldtw_dba, "../result/clustering/clus_hirarchicaldtw_dba.bin")
+#save_clustering_result(clus_hirarchical_sdtw_sdtw, "../result/clustering/clus_hirarchical_sdtw_sdtw.bin")
+```
+
+```{r}
+
+```

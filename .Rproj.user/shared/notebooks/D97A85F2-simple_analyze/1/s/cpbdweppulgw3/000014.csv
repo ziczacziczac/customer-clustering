@@ -1,0 +1,7 @@
+"0","data <- read.csv(file = ""output_count.csv"", sep=""+"", header=TRUE)"
+"0","dim(data)"
+"1","[1]"
+"1"," 55609"
+"1","     4"
+"1","
+"

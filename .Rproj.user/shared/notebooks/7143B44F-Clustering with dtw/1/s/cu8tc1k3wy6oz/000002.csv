@@ -1,0 +1,45 @@
+"0","```r
+require(doParallel)
+print(\"Do in one thread\")
+```"
+"1","[1] \"Do in one thread\"
+"
+"0","```r
+registerDoSEQ()
+clust <- tsclust(t(train), type = \"partitional\", k = 4, distance = \"dtw\")
+cvi(clust, b = NULL, type = c(\"internal\"))
+```"
+"1","       Sil         SF         CH         DB     DBstar          D        COP 
+ 0.2655516  0.0000000 37.3713840  4.6854571 10.4170501  0.0022352  0.0758699 
+"
+"0","```r
+#cl <- makeCluster(detectCores())
+#invisible(clusterEvalQ(cl, {
+#    library(dtwclust)
+#    RcppParallel::setThreadOptions(2L)
+#}))
+#registerDoParallel(cl)
+#print(\"Do in parallel\")
+#clus_res <- tsclust(t(train), type = \"partitional\", k = c(2, 3), distance = \"dtw\")
+
+#tsclust(t(train), type = \"partitional\", k = 4, distance = \"dtw2\")
+#tsclust(t(train), type = \"partitional\", k = 4, distance = \"dtw2\", centroid = \"dba\")
+#tsclust(t(train), type = \"partitional\", k = 4, distance = \"sdtw\")
+#tsclust(t(train), type = \"partitional\", k = 4, distance = \"sdtw\", centroid = \"sdtw_cent\")
+
+#clus_partitional_dtw_pam <- tsclust(t(balance_smooth_nor_clean), type = \"partitional\", k = c(2:8), distance = \"dtw\")
+#clus_partitional_dtw_dba <- tsclust(t(balance_smooth_nor_clean), type = \"partitional\", k = c(2:8), distance = \"dtw\", centroid = \"dba\")
+#clus_partitional_sdtw_sdtw <- tsclust(t(balance_smooth_nor_clean), type = \"partitional\", k = c(2:8), distance = \"sdtw\", centroid = \"sdtw_cent\")
+
+#clus_hirarchical_dtw_pam <- tsclust(t(balance_smooth_nor_clean), type = \"hierarchical\", k = c(2:8), distance = \"dtw\")
+#clus_hirarchicaldtw_dba <- tsclust(t(balance_smooth_nor_clean), type = \"hierarchical\", k = c(2:8), distance = \"dtw\", centroid = \"dba\")
+#clus_hirarchical_sdtw_sdtw <- tsclust(t(balance_smooth_nor_clean), type = \"hierarchical\", k = c(2:8), distance = \"sdtw\", centroid = \"sdtw_cent\")
+
+#save_clustering_result(clus_partitional_dtw_pam, \"../result/clustering/clus_partitional_dtw_pam.bin\")
+#save_clustering_result(clus_partitional_dtw_dba, \"../result/clustering/clus_partitional_dtw_dba.bin\")
+#save_clustering_result(clus_partitional_sdtw_sdtw, \"../result/clustering/clus_partitional_sdtw_sdtw.bin\")
+
+#save_clustering_result(clus_hirarchical_dtw_pam, \"../result/clustering/clus_hirarchical_dtw_pam.bin\")
+#save_clustering_result(clus_hirarchicaldtw_dba, \"../result/clustering/clus_hirarchicaldtw_dba.bin\")
+#save_clustering_result(clus_hirarchical_sdtw_sdtw, \"../result/clustering/clus_hirarchical_sdtw_sdtw.bin\")
+```"

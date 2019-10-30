@@ -1,0 +1,15 @@
+"0","```r
+train <- raw_balance[1:48, ]
+test <- raw_balance[49:59, ]
+
+raw_train <- raw_balance[1:48, ]
+raw_test <- raw_balance[49:49, ]
+dim(train)
+```"
+"1","[1]  48 455
+"
+"0","```r
+dim(test)
+```"
+"1","[1]  11 455
+"

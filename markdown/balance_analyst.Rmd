@@ -1,0 +1,102 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(cluster)
+library(knitr)
+library(hts)
+library(forecast)
+library(data.table)
+```
+
+```{r}
+balance_close <- fread("balance_open_timeseries.csv", header = F, sep = ",")
+```
+
+```{r}
+class(balance_close)
+```
+
+```{r}
+mean_balance_account <- colSums(balance_close[1:49, ]) / 49
+t = quantile(mean_balance_account[mean_balance_account > 8], seq(1, 100, 1) / 100)
+plot(as.numeric(t), ylim = c(8, 100))
+boxplot(as.numeric(t), ylim = c(100, 500))
+```
+
+```{r}
+par(mfrow = c(2, 2))
+colors = c("red", "darkblue", "purple", "orange")
+for(i in 1:4){
+  plot(balance_close[,which(mean_balance_account > 8)][, i], type = "l", ylab = "SO DU(TRIEU)", xlab = "THANG", col = colors[i])
+}
+```
+
+```{r}
+sum(mean_balance_account[mean_balance_account < 8])
+sum(mean_balance_account[mean_balance_account > 8])
+sum(mean_balance_account[mean_balance_account > 100 & mean_balance_account < 1e5]) / sum(mean_balance_account)
+length(mean_balance_account[mean_balance_account > 100 & mean_balance_account < 1e5])
+```
+
+```{r}
+list_id <- as.integer(which(mean_balance_account > 100 & mean_balance_account < 1e5))
+balance_to_process <- as.data.frame(balance_close)[1:59, list_id]
+colnames(balance_to_process) <- list_id
+write.table(balance_to_process, "balance_open.csv", row.names = F, col.names = F)
+
+balance_to_process_nor <- matrix(0, nrow = length(balance_to_process[, 1]), ncol = length(balance_to_process[1, ]))
+for(i in 1:length(balance_to_process[1, ])){
+  balance_to_process_nor[, i] = (balance_to_process[, i] - min(balance_to_process[, i])) / (max(balance_to_process[, i]) - min(balance_to_process[, i]))
+}
+colnames(balance_to_process_nor) <- list_id
+write.csv(balance_to_process_nor, "balance_close_nor.csv")
+```
+
+
+```{r}
+computeDistMatrix <- function(data){
+  library(TSdist)
+  n = length(data[1, ])
+  m = matrix(0, nrow = n, ncol = n)
+  for(i in 1:(n - 1)){
+    for(j in (i+1):n){
+      x = data[, i]
+      y = data[, j]
+     
+      d = CCorDistance(x, y)
+      
+      #print(d)
+      m[i, j] = d
+      m[j, i] = d
+    }
+  }
+  return(m)
+}
+
+#system.time(diss_acf <- diss(t(balance_to_process_nor), "ACF"))
+#system.time(diss_pacf <- diss(t(balance_to_process_nor), "PACF"))
+#system.time(diss_ccd <- computeDistMatrix(amount_debit_cluster3_nor))
+#system.time(diss_eucl <- diss(t(balance_to_process_nor), "EUCL"))
+#system.time(diss_dtwarp <- diss(t(balance_to_process_nor), "DTWARP"))
+
+write.csv(as.matrix(diss_acf), "balance_diss_acf.csv")
+write.csv(as.matrix(diss_pacf), "balance_diss_pacf.csv")
+#write.csv(as.matrix(diss_ccd_cluster3), "balance_diss_ccd.csv")
+write.csv(as.matrix(diss_eucl), "balance_diss_eucl.csv")
+#write.csv(as.matrix(diss_dtwarp_cluster3), "balance_diss_dtwarp.csv")
+```
+
+
+```{r}
+system.time(diss_ccd <- computeDistMatrix(balance_to_process_nor))
+write.csv(as.matrix(diss_ccd), "balance_diss_ccd.csv")
+
+library(dtw)
+system.time(diss_dtwarp <- diss(t(balance_to_process_nor), "DTWARP"))
+write.csv(as.matrix(diss_dtwarp), "balance_diss_dtwarp.csv")
+```

@@ -1,0 +1,2 @@
+"0","dens <- density(filter);"
+"0","plot(dens);"

@@ -1,0 +1,262 @@
+---
+title: "Customer behavior clustering"
+author: "DatDQ"
+date: "7/30/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(dtwclust)
+library(stats)
+require(doParallel)
+require(DDoutlier)
+library(hts)
+source("../lib/data_description.R")
+```
+
+## Read data
+```{r cars}
+balance_open <- read_customer_data("../data/balance_open.csv");
+dim(balance_open)
+```
+
+## Sampling data
+```{r pressure, echo=FALSE}
+png("sample.png", width=2000, height=1500, res=300)
+windowsFonts(
+  A=windowsFont("Times New Roman"),
+  B=windowsFont("Bookman Old Style"),
+  C=windowsFont("Comic Sans MS"),
+  D=windowsFont("Symbol")
+)
+z <- balance_open[, 3]
+plot(z, type = "l", lwd = 2, col = "midnightblue", xlab = "Months", ylab = "Balance (million)", family = "A", axes = F, xlim = c(0, 50), ylim = c(0, 500), font.lab = 2, cex.lab = 1.2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+for(i in 3:5){
+  lines(ts(balance_open[, i]), col = colors()[80+i], lwd=2)
+}
+dev.off()
+```
+
+## Simple data description
+So luong account
+Gia tri trung binh cua gia tri trung binh so tien gui cua moi account
+Phuong sai cua gia tri trung binh so tien gui cua moi account
+Do thi phan phoi histogram(density) cua gia tri trung binh cua moi account
+```{r}
+```
+
+## Pre-processing
+
+```{r}
+source("../lib/preprocessing.R")
+```
+#Smooth data
+```{r pressure, echo = FALSE}
+balance_smooth <- balanace_smooth(balance_open);
+png("smooth.png", width=2000, height=1500, res=300)
+windowsFonts(
+  A=windowsFont("Times New Roman"),
+  B=windowsFont("Bookman Old Style"),
+  C=windowsFont("Comic Sans MS"),
+  D=windowsFont("Symbol")
+)
+
+plot(balance_open[, 1], col = "red", type = "l", ylab = "Balance value (million)", xlab = "Months", lwd = 2, family = "A", axes = F, xlim = c(0, 50), ylim = c(0, 500), font.lab = 2, cex.lab = 1.2)
+lines(balance_smooth[, 1], lty=1:2, col = "blue", lwd = 2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+legend("topleft", col = c("red", "blue"), legend = c("Before Smooth", "After Smooth"), lty = 1:1, lwd = 2)
+dev.off()
+```
+
+#Normalize data
+```{r}
+balance_smooth_nor <- normalize(balance_smooth);
+
+png("smooth_normalized.png", width=2000, height=1200, res=300)
+windowsFonts(
+  A=windowsFont("Times New Roman"),
+  B=windowsFont("Bookman Old Style"),
+  C=windowsFont("Comic Sans MS"),
+  D=windowsFont("Symbol")
+)
+
+plot(balance_smooth_nor[, 1], type = "l", col = colors()[100], xlab = "Months", ylab = "", lwd = 2, 
+     family = "A", axes = F, xlim = c(0, 50), font.lab = 2, cex.lab = 1.2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+for(i in 1:5){
+  lines(ts(balance_smooth_nor[, i]), col = colors()[80+i], lwd = 2)
+}
+
+dev.off()
+```
+
+#Remove anomally
+
+#Anomally detection
+```{r}
+source("../lib/preprocessing.R")
+before_remove_anomally_pca <- prcomp(t(balance_smooth_nor))
+before_remove_anomally_pca$sdev
+
+png("pca_before.png", width=1500, height=1500, res=300)
+plot(before_remove_anomally_pca$x[, 1:2], pch = 19, family = "A", axes = F, font.lab = 2, cex.lab = 1.2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+dev.off()
+
+sorted_outlier_score <- get_outlier_score(balance_smooth_nor, 600)
+
+png("sorted_outlier_score.png", width=2000, height=1200, res=300)
+plot(sorted_outlier_score, type = "l", xlab = "", ylab = "Outlier Score", lwd = 2, family = "A", axes = F, font.lab = 2, cex.lab = 1.2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+dev.off()
+```
+
+#Filter anomally
+```{r}
+source("../lib/preprocessing.R")
+outlier_index <- filter_annomaly(sorted_outlier_score, 1300, balance_open, balance_smooth_nor);
+write.table(outlier_index, file = "outlier_index.csv", row.names = FALSE, col.names = FALSE)
+png("pca_after.png", width=1500, height=1500, res=300)
+plot(before_remove_anomally_pca$x[-as.integer(outlier_index), 1:2], xlim = c(-4, 2), ylim = c(-3, 3), pch = 19, family = "A", axes = F, font.lab = 2, cex.lab = 1.2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+dev.off()
+```
+
+#Analyze anomally
+```{r}
+source("../lib/preprocessing.R")
+source("../lib/data_description.R")
+balance_smooth_nor_cleans <- read_customer_data("../data/balance_smooth_nor_anomally.csv")
+dim(balance_smooth_nor_cleans)
+```
+
+## Clustering
+
+# Clustering with DTW in L2 norm + DBA centroid + Partitional
+```{r}
+require(doParallel)
+library(dtwclust)
+source("../lib/data_description.R")
+source("../lib/preprocessing.R")
+
+cl <- makeCluster(detectCores())
+invisible(clusterEvalQ(cl, {
+    library(dtwclust)
+    RcppParallel::setThreadOptions(2L)
+}))
+registerDoParallel(cl)
+balance_clean <- read_customer_data("../data/balance_smooth_nor_clean.csv")
+dim(balance_clean)
+k_s <- 4
+#clus_partitional_dtw_pam <- tsclust(t(balance_clean), type = "partitional", k = k_s, distance = "dtw")
+#save_clustering_result(clus_partitional_dtw_pam, "../result/clustering/clus_partitional_dtw_pam1.bin")
+
+#clus_partitional_dtw_dba <- tsclust(t(balance_clean), type = "partitional", k = k_s, distance = "dtw", centroid = "dba")
+#save_clustering_result(clus_partitional_dtw_dba, "../result/clustering/clus_partitional_dtw_dba1.bin")
+
+clus_partitional_sdtw_sdtw <- tsclust(t(balance_clean), type = "partitional", k = k_s, distance = "sdtw", centroid = "sdtw_cent")
+save_clustering_result(clus_partitional_sdtw_sdtw, "../result/clustering/clus_partitional_sdtw_sdtw.bin")
+
+#clus_hirarchical_dtw_pam <- tsclust(t(balance_clean), type = "hierarchical", k = k_s, distance = "dtw")
+#save_clustering_result(clus_hirarchical_dtw_pam, "../result/clustering/clus_hirarchical_dtw1.bin")
+
+#clus_hirarchical_sdtw_sdtw <- tsclust(t(balance_clean), type = "hierarchical", k = k_s, distance = "sdtw")
+#save_clustering_result(clus_hirarchical_sdtw_sdtw, "../result/clustering/clus_hirarchical_sdtw1.bin")
+
+```
+
+
+# Clustering with DTW in L2 norm + DBA centroid + Hirachical
+```{r}
+library(dtwclust)
+source("../lib/data_description.R")
+source("../lib/clustering_result_analyst.R")
+balance_open_smooth_nor_clean <- read.csv("../data/balance_smooth_nor_clean.csv", header = FALSE)
+dim(balance_open_smooth_nor_clean)
+listClusterResultFiles = c("../result/clustering/clus_hirarchical_dtw.bin", 
+                           "../result/clustering/clus_hirarchical_sdtw.bin",
+                           "../result/clustering/clus_partitional_dtw_pam.bin",
+                           "../result/clustering/clus_partitional_dtw_dba.bin",
+                           "../result/clustering/clus_partitional_sdtw_sdtw.bin")
+dist_types <- c("dtw", "sdtw", "dtw", "dtw", "sdtw")
+
+listClusterResultFiles_sdtw = c("../result/clustering/clus_partitional_sdtw_sdtw.bin")
+dist_types_sdtw <- c("sdtw")
+#clustering_result_analysis(listClusterResultFiles)
+
+plot_clustering_result(listClusterResultFiles_sdtw, balance_open_smooth_nor_clean, dist_types_sdtw, 40)
+
+#listClusterResultFilesTest = c("../result/clustering/clus_hirarchical_dtw.bin");
+#dist_types_test = c("dtw")
+
+#dtw_distmat <- load_clustering_result("../result/clustering/clus_hirarchical_dtw.bin")[[1]]@distmat
+#sdtw_distmat <- load_clustering_result("../result/clustering/clus_hirarchical_sdtw.bin")[[1]]@distmat
+
+#clustering_result_analysis_for_one("../result/clustering/clus_partitional_dtw_dba.bin", dtw_distmat)
+#clustering_result_analysis_for_one("../result/clustering/clus_partitional_sdtw_sdtw.bin", sdtw_distmat)
+
+#z <- load_clustering_result("../result/clustering/clus_partitional_dtw_dba.bin")
+#dtw_dist <- as.matrix(read.csv("../result/clustering/dtw_distance.csv", header = FALSE));
+#z[[1]]@distmat <- x[[1]]@distmat
+#cvi(z[[1]], b = NULL, type = "Sil")
+#sdtw_dist <- as.matrix(read.csv("../result/clustering/sdtw_distance.csv", header = FALSE));
+
+```
+
+# Clustering with SDTW + SDTW centroid + Hirachical
+```{r}
+
+```
+```{r}
+windowsFonts(
+  A=windowsFont("Times New Roman"),
+  B=windowsFont("Bookman Old Style"),
+  C=windowsFont("Comic Sans MS"),
+  D=windowsFont("Symbol")
+)
+plot(1:10,xlab="x axis", ylab="y axis",  pch=19, axes = F, font.lab = 2, family = "A")
+
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+
+
+```
+
+
+# Analyze cluster and compare result
+Average distance
+Silhouete value
+Time series model of sum series
+Time series model of average series
+
+# Analyze cluster of the best method
+```{r}
+source("../lib/datadescription.R")
+best_clustering_result <- load_clustering_result("../result/clustering/clus_partitional_sdtw_sdtw.bin")
+balance_open_clean <- read.csv("../data/balance_open_clean.csv", header = FALSE)
+
+f <- summaryData(data = balance_open_clean, best_clustering_result@cluster)
+kable(f, digits = 2)
+
+png("cluster_series.png", height = 1500, width = 2000, res = 300)
+arima <- arima_model_cluster(balance_open_clean, best_clustering_result@cluster)
+arima
+dev.off()
+
+png("total_balance_series.png", width = 2000, height = 1200, res = 300)
+y <- rowSums(balance_open_clean) / 10^3
+auto.arima(y)
+plot(y, type = "l", lwd = 2, col = "midnightblue", xlab = "Months", ylab = "Balance (billion)", family = "A", axes = F, xlim = c(0, 50), ylim = c(500, 2500), font.lab = 2)
+axis(1, family = 'A', font = 2)
+axis(2, family = 'A', font = 2)
+dev.off()
+```

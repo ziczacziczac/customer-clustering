@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572366691992.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "592514170",
+    "id" : "3A8D4FC0",
+    "lastKnownWriteTime" : 1565441201,
+    "last_content_update" : 1565441201,
+    "path" : "~/Time series clustering/lib/preprocessing.R",
+    "project_path" : "lib/preprocessing.R",
+    "properties" : {
+        "cursorPosition" : "49,2",
+        "scrollLine" : "22"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

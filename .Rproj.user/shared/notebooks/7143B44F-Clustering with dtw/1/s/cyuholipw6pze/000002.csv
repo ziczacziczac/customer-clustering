@@ -1,0 +1,10 @@
+"0","```r
+sum_raw <- colSums(raw_balance)
+index <- which(sum_raw > 0)
+index2 <- which(sum_raw == 0)
+raw_balance <- raw_balance[, index]
+zero_balance <- raw_balance[, index2]
+dim(raw_balance)
+```"
+"1","[1]  58 455
+"

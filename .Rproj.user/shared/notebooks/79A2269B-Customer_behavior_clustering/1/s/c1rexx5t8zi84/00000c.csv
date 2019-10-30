@@ -1,0 +1,7 @@
+"0","source(""../lib/datadescription.R"")"
+"0","best_clustering_result <- load_clustering_result(""../result/clustering/clus_partitional_sdtw_sdtw.bin"")"
+"0","balance_open_clean <- read.csv(""../data/balance_open_clean.csv"", header = FALSE)"
+"0",""
+"0","f <- summaryData(data = balance_open_clean, best_clustering_result@cluster)"
+"2","number of rows of result is not a multiple of vector length (arg 1)"
+"0","kable(f, digits = 2)"

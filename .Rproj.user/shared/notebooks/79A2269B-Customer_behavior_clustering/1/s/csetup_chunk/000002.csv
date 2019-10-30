@@ -1,0 +1,72 @@
+"0","knitr::opts_chunk$set(echo = TRUE)"
+"0","library(knitr)"
+"0","library(dtwclust)"
+"2","package ‘dtwclust’ was built under R version 3.6.1"
+"2","Loading required package: proxy
+"
+"2","
+Attaching package: ‘proxy’
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    as.dist, dist
+
+"
+"2","The following object is masked from ‘package:base’:
+
+    as.matrix
+
+"
+"2","Loading required package: dtw
+"
+"2","Loaded dtw v1.20-1. See ?dtw for help, citation(""dtw"") for use in publication.
+
+"
+"2","Registered S3 method overwritten by 'dplyr':
+  method           from
+  print.rowwise_df     
+"
+"2","Registered S3 methods overwritten by 'htmltools':
+  method               from         
+  print.html           tools:rstudio
+  print.shiny.tag      tools:rstudio
+  print.shiny.tag.list tools:rstudio
+"
+"2","dtwclust:
+Setting random number generator to L'Ecuyer-CMRG (see RNGkind()).
+To read the included vignettes type: browseVignettes(""dtwclust"").
+See news(package = ""dtwclust"") after package updates.
+"
+"0","library(stats)"
+"0","require(doParallel)"
+"2","Loading required package: doParallel
+"
+"2","package ‘doParallel’ was built under R version 3.6.1"
+"2","Loading required package: foreach
+"
+"2","Loading required package: iterators
+"
+"2","Loading required package: parallel
+"
+"0","require(DDoutlier)"
+"2","Loading required package: DDoutlier
+"
+"2","package ‘DDoutlier’ was built under R version 3.6.1"
+"0","library(hts)"
+"2","Loading required package: forecast
+"
+"2","Registered S3 method overwritten by 'xts':
+  method     from
+  as.zoo.xts zoo 
+"
+"2","Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo 
+"
+"2","Registered S3 methods overwritten by 'forecast':
+  method             from    
+  fitted.fracdiff    fracdiff
+  residuals.fracdiff fracdiff
+"
+"0","source(""../lib/data_description.R"")"
